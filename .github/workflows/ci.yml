@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpp:
+    name: C++ Compile
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++
+
+      - name: Compile every C++ solution
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t files < <(find . -type f -name "*.cpp" | sort)
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No C++ files found."
+            exit 0
+          fi
+
+          mkdir -p /tmp/build
+
+          for file in "${files[@]}"; do
+            output="/tmp/build/$(basename "${file%.cpp}")"
+
+            echo "Compiling: $file"
+
+            g++ \
+              "$file" \
+              -std=c++20 \
+              -O2 \
+              -pipe \
+              -Wall \
+              -Wextra \
+              -Wshadow \
+              -Wconversion \
+              -Wsign-conversion \
+              -Wnull-dereference \
+              -Wformat=2 \
+              -Wduplicated-cond \
+              -Wlogical-op \
+              -Wpedantic \
+              -o "$output"
+          done
+
+          echo "All C++ files compiled successfully."
+
+  python:
+    name: Python Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install black ruff
+
+      - name: Run Python checks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t files < <(find . -type f -name "*.py" | sort)
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No Python files found."
+            exit 0
+          fi
+
+          for file in "${files[@]}"; do
+            echo "Checking syntax: $file"
+            python -m py_compile "$file"
+          done
+
+          echo "Running Ruff..."
+          ruff check .
+
+          echo "Running Black..."
+          black --check .
+
+          echo "All Python checks passed."
