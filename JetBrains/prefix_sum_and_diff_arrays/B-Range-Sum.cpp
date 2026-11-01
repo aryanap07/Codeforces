@@ -1,0 +1,61 @@
+// Optimal Solution
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n, q;
+    cin >> n >> q;
+
+    vector<long long> prefix(n + 1, 0);
+
+    for (int i = 1; i <= n; i++) {
+        long long x;
+        cin >> x;
+        prefix[i] = prefix[i - 1] + x;
+    }
+
+    while (q--) {
+        int l, r;
+        cin >> l >> r;
+
+        cout << prefix[r] - prefix[l - 1] << '\n';
+    }
+
+    return 0;
+}
+
+
+// Worst Time Case
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    int n,q;
+    cin >> n >> q;
+	
+	vector<int> arr(n);
+	
+    for (int i = 0; i < n; i++) {
+		cin >> arr[i];
+    }
+    
+    while(q--){
+    	int l,r;
+    	cin >> l >> r;
+    	
+    	long long sum = 0;
+    	
+    	for(int i = l-1; i < r; i++){
+    		sum += arr[i];
+    	}
+    	
+    	cout << sum << "\n";
+    }
+
+    return 0;
+}
